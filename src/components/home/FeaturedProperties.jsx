@@ -95,8 +95,8 @@ const FeaturedProperties = () => {
         Suspendisse dictum enim sit amet libero malesuada feugiat.
       </p>
 
-      <div className="container mx-auto mt-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="container px-5 md:px-0 mx-auto mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
           {propertiesData.map((property) => (
             <div
               key={property.id}
