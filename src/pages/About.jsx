@@ -1,9 +1,9 @@
-import AboutHeader from "../components/about/AboutHeader";
+import CommonHeader from "../components/common/CommonHeader";
 
 const About = () => {
   return (
     <div>
-        <AboutHeader />
+        <CommonHeader title="About Us" subtitle="We're here to help with all your real estate needs"/>
     </div>
   )
 }
