@@ -1,10 +1,9 @@
-import React from 'react'
-import Header from '../components/about/Header';
+import AboutHeader from "../components/about/AboutHeader";
 
 const About = () => {
   return (
     <div>
-        <Header />
+        <AboutHeader />
     </div>
   )
 }
