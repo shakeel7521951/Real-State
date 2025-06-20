@@ -1,37 +1,37 @@
 import "./App.css";
-import Footer from "./components/common/Footer";
-import Navbar from "./components/common/Navbar";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Properties from "./pages/Properties";
-import DashboardProperties from "./components/dashboard/Properties";
-
-const Mainfunction = () => {
-  return (
-    <div>
-      <Navbar />
-      <Outlet />
-      <Footer />
-    </div>
-  );
-};
+import Dashboard from "./components/dashboard/Dashboard";
+import MainLayout from "./layouts/MainLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
-    element: <Mainfunction />,
+    element: <MainLayout />,
     children: [
       { path: "", element: <Home /> },
       { path: "/home", element: <Home /> },
       { path: "/about", element: <About /> },
       { path: "/properties", element: <Properties /> },
       { path: "/contact", element: <Contact /> },
-      { path: "/dashboard", element: <DashboardProperties /> },
+      { path: "/login", element: <Login /> },
     ],
   },
-  { path: "/login", element: <Login /> },
+  {
+    path: "/admin",
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [{ path: "dashboard", element: <Dashboard /> }],
+      },
+    ],
+  },
 ]);
 
 function App() {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiLock, FiMail } from 'react-icons/fi';
+import React from "react";
+import { FiLock, FiMail } from "react-icons/fi";
 
 const Login = () => {
   return (
@@ -10,18 +10,25 @@ const Login = () => {
           <div className="mx-auto w-16 h-16 rounded-full bg-[#947054] flex items-center justify-center mb-4">
             <span className="text-white text-2xl font-serif font-bold">RE</span>
           </div>
-          <h1 className="text-3xl font-serif font-medium text-[#947054] mb-2">Prime Estates</h1>
+          <h1 className="text-3xl font-serif font-medium text-[#947054] mb-2">
+            Prime Estates
+          </h1>
           <p className="text-black/70">Professional real estate services</p>
         </div>
 
         {/* Login Card */}
         <div className="bg-white border border-[#e8e1d9] rounded-lg shadow-sm overflow-hidden">
           <div className="px-8 py-6">
-            <h2 className="text-2xl font-medium text-black mb-6 text-center">Sign In</h2>
-            
+            <h2 className="text-2xl font-medium text-black mb-6 text-center">
+              Sign In
+            </h2>
+
             <form className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-black mb-2"
+                >
                   Email Address
                 </label>
                 <div className="relative">
@@ -41,7 +48,10 @@ const Login = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-black mb-2"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -68,13 +78,19 @@ const Login = () => {
                     type="checkbox"
                     className="h-4 w-4 text-[#947054] focus:ring-[#947054] border-[#e8e1d9] rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-black/80">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-black/80"
+                  >
                     Remember me
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-[#947054] hover:text-[#836449]">
+                  <a
+                    href="#"
+                    className="font-medium text-[#947054] hover:text-[#836449]"
+                  >
                     Forgot password?
                   </a>
                 </div>
@@ -93,8 +109,11 @@ const Login = () => {
 
           <div className="bg-[#f9f7f5] px-8 py-4 border-t border-[#e8e1d9]">
             <p className="text-sm text-black/80 text-center">
-              Don't have an account?{' '}
-              <a href="#" className="font-medium text-[#947054] hover:text-[#836449]">
+              Don't have an account?{" "}
+              <a
+                href="#"
+                className="font-medium text-[#947054] hover:text-[#836449]"
+              >
                 Request access
               </a>
             </p>
