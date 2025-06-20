@@ -8,6 +8,7 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Properties from "./pages/Properties";
 import SignUp from "./pages/Signup";
+import DashboardProperties from "./components/dashboard/Properties";
 
 const Mainfunction = () => {
   return (
@@ -28,7 +29,7 @@ const router = createBrowserRouter([
       { path: "/about", element: <About /> },
       { path: "/properties", element: <Properties /> },
       { path: "/contact", element: <Contact /> },
-      { path: "/dashboard", element: <Properties /> },
+      { path: "/dashboard", element: <DashboardProperties /> },
     ],
   },
   { path: "/login", element: <Login /> },
