@@ -1,5 +1,6 @@
 import React from "react";
 import { FiLock, FiMail } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   return (
@@ -110,12 +111,12 @@ const Login = () => {
           <div className="bg-[#f9f7f5] px-8 py-4 border-t border-[#e8e1d9]">
             <p className="text-sm text-black/80 text-center">
               Don't have an account?{" "}
-              <a
-                href="#"
+              <Link
+                to="/signup"
                 className="font-medium text-[#947054] hover:text-[#836449]"
               >
                 Request access
-              </a>
+              </Link>
             </p>
           </div>
         </div>

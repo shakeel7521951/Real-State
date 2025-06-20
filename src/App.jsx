@@ -5,6 +5,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Properties from "./pages/Properties";
+import SignUp from "./pages/Signup";
+
 import Dashboard from "./components/dashboard/Dashboard";
 import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
@@ -20,6 +22,7 @@ const router = createBrowserRouter([
       { path: "/properties", element: <Properties /> },
       { path: "/contact", element: <Contact /> },
       { path: "/login", element: <Login /> },
+      { path: "/signup", element: <SignUp /> },
     ],
   },
   {
