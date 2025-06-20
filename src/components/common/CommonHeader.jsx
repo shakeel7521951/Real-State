@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const CommonHeader = ({ title = "Contact Us", subtitle = "We're here to help with all your real estate needs" }) => {
   return (
@@ -28,7 +29,7 @@ const CommonHeader = ({ title = "Contact Us", subtitle = "We're here to help wit
           <nav className="text-sm text-white/90">
             <ol className="flex items-center space-x-2">
               <li className="hover:text-white transition-colors">
-                <a href="/">Home</a>
+                <Link to="/">Home</Link>
               </li>
               <li>/</li>
               <li className="text-white font-medium">

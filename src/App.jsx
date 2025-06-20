@@ -7,6 +7,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Properties from "./pages/Properties";
+import SignUp from "./pages/Signup";
 
 const Mainfunction = () => {
   return (
