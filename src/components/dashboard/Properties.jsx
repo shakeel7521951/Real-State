@@ -46,7 +46,7 @@ const sampleProperties = [
   },
 ];
 
-const Properties = () => {
+const DashboardProperties = () => {
   const [properties, setProperties] = useState(sampleProperties);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProperty, setCurrentProperty] = useState(null);
@@ -359,4 +359,4 @@ const Properties = () => {
   );
 };
 
-export default Properties;
+export default DashboardProperties;
