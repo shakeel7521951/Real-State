@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import Properties from "./components/dashboard/Properties";
 
 const Mainfunction = () => {
   return (
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
       { path: "/home", element: <Home /> },
       { path: "/about", element: <About /> },
       { path: "/contact", element: <Contact /> },
+      { path: "/dashboard", element: <Properties /> },
     ],
   },
   { path: "/login", element: <Login /> },
