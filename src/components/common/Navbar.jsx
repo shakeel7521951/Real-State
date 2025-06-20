@@ -43,9 +43,11 @@ const Navbar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <button className="text-gray-700 hover:text-[#947054] font-medium transition">
-            Login
-          </button>
+          <Link to="/login">
+            <button className="text-gray-700 hover:text-[#947054] font-medium transition">
+              Login
+            </button>
+          </Link>
           <button className="bg-[#947054] text-white px-4 py-2 rounded-md hover:bg-[#7a5c43] transition shadow-sm">
             Sign Up
           </button>
