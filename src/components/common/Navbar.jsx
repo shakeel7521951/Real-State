@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/logo.jpg";
@@ -19,12 +19,6 @@ const Navbar = () => {
               loading="lazy"
             />
           </Link>
-          {/* <Link to="/" className="flex items-center">
-            <span className="bg-[#947054] text-white px-2 py-1 rounded mr-2">
-              L
-            </span>
-            <span className="hidden sm:inline">Logo</span>
-          </Link> */}
         </div>
 
         {/* Desktop Menu */}
@@ -48,9 +42,11 @@ const Navbar = () => {
               Login
             </button>
           </Link>
-          <button className="bg-[#947054] text-white px-4 py-2 rounded-md hover:bg-[#7a5c43] transition shadow-sm">
-            Sign Up
-          </button>
+          <Link to="/signup">
+            <button className="bg-[#947054] text-white px-4 py-2 rounded-md hover:bg-[#7a5c43] transition shadow-sm">
+              Sign Up
+            </button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
