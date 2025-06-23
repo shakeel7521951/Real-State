@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { propertyService } from "../../services/api";
 import PropertyModal from "./PropertyModal";
 
@@ -47,24 +47,33 @@ const sampleProperties = [
 ];
 
 const DashboardProperties = () => {
-  const [properties, setProperties] = useState(sampleProperties);
+  // Start with an empty array to avoid any map issues, we'll load data from API
+  const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProperty, setCurrentProperty] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // For real API implementation, uncomment this
-  // useEffect(() => {
-  //   fetchProperties();
-  // }, []);
-
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state
+  // Fetch properties on component mount
+  useEffect(() => {
+    fetchProperties();
+  }, []);
   const fetchProperties = async () => {
     try {
       setIsLoading(true);
-      const data = await propertyService.getAllProperties();
-      setProperties(data);
+      const response = await propertyService.getAllProperties();
+      // Check the response structure and extract the array of properties
+      if (response && response.data) {
+        setProperties(response.data);
+      } else if (Array.isArray(response)) {
+        setProperties(response);
+      } else {
+        // Fallback to sample data if response structure is unexpected
+        console.warn("Unexpected API response structure:", response);
+        setProperties(sampleProperties);
+      }
       setIsLoading(false);
     } catch (error) {
       console.error("Failed to fetch properties:", error);
+      setProperties(sampleProperties); // Fallback to sample data on error
       setIsLoading(false);
     }
   };
@@ -78,48 +87,89 @@ const DashboardProperties = () => {
     setCurrentProperty(property);
     setIsModalOpen(true);
   };
-
   const handleDeleteProperty = async (id) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
       try {
-        // For real implementation:
-        // await propertyService.deleteProperty(id);
-
-        // For demo:
-        setProperties(properties.filter((property) => property.id !== id));
+        setIsLoading(true);
+        await propertyService.deleteProperty(id);
+        // Update local state safely
+        setProperties((prevProperties) =>
+          Array.isArray(prevProperties)
+            ? prevProperties.filter((property) => property.id !== id)
+            : []
+        );
       } catch (error) {
         console.error("Failed to delete property:", error);
+        // Fallback for development or demo
+        if (import.meta.env.DEV) {
+          setProperties((prevProperties) =>
+            Array.isArray(prevProperties)
+              ? prevProperties.filter((property) => property.id !== id)
+              : []
+          );
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
   };
-
   const handleSaveProperty = async (propertyData) => {
     try {
+      setIsLoading(true);
       if (propertyData.id) {
         // Edit existing property
-        // For real implementation:
-        // await propertyService.updateProperty(propertyData.id, propertyData);
+        const response = await propertyService.updateProperty(
+          propertyData.id,
+          propertyData
+        );
 
-        // For demo:
-        setProperties(
-          properties.map((prop) =>
-            prop.id === propertyData.id ? propertyData : prop
-          )
+        // Check if response has data structure
+        const updatedProperty =
+          response && response.data ? response.data : propertyData;
+
+        // Update local state safely
+        setProperties((prevProperties) =>
+          Array.isArray(prevProperties)
+            ? prevProperties.map((prop) =>
+                prop.id === propertyData.id ? updatedProperty : prop
+              )
+            : [updatedProperty]
         );
       } else {
         // Add new property
-        // For real implementation:
-        // const savedProperty = await propertyService.createProperty(propertyData);
+        const savedPropertyResponse = await propertyService.createProperty(
+          propertyData
+        );
 
-        // For demo:
-        const newProperty = {
-          ...propertyData,
-          id: Math.max(...properties.map((p) => p.id), 0) + 1,
-        };
-        setProperties([...properties, newProperty]);
+        // Check different possible response structures
+        let newProperty;
+        if (savedPropertyResponse?.data) {
+          newProperty = savedPropertyResponse.data;
+        } else if (savedPropertyResponse && !savedPropertyResponse.data) {
+          // In case API directly returns the property object
+          newProperty = savedPropertyResponse;
+        } else {
+          // Fallback for development
+          newProperty = {
+            ...propertyData,
+            id:
+              Array.isArray(properties) && properties.length > 0
+                ? Math.max(...properties.map((p) => Number(p.id) || 0), 0) + 1
+                : 1,
+          };
+        }
+
+        // Update state safely
+        setProperties((prevProperties) =>
+          Array.isArray(prevProperties)
+            ? [...prevProperties, newProperty]
+            : [newProperty]
+        );
       }
     } catch (error) {
       console.error("Failed to save property:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -201,151 +251,152 @@ const DashboardProperties = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((property) => (
-            <div
-              key={property.id}
-              className="bg-white rounded-lg shadow-md group overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative overflow-hidden h-60">
-                {property.images && property.images.length > 0 ? (
-                  <div className="relative w-full h-full">
+          {Array.isArray(properties) &&
+            properties.map((property) => (
+              <div
+                key={property.id}
+                className="bg-white rounded-lg shadow-md group overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative overflow-hidden h-60">
+                  {property.images && property.images.length > 0 ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={property.images[0]}
+                        alt={property.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+
+                      {property.images.length > 1 && (
+                        <div className="absolute bottom-3 left-3 flex space-x-1">
+                          {property.images.slice(0, 3).map((img, idx) => (
+                            <div
+                              key={idx}
+                              className={`w-2 h-2 rounded-full ${
+                                idx === 0 ? "bg-white" : "bg-white/60"
+                              }`}
+                            />
+                          ))}
+                          {property.images.length > 3 && (
+                            <span className="text-xs bg-white/80 text-gray-800 rounded-full px-2">
+                              +{property.images.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+
+                  <button
+                    className={`absolute top-3 right-3 ${
+                      property.forSale ? "bg-[#947054]" : "bg-blue-600"
+                    } text-white group-hover:bg-white group-hover:text-[#947054] transition duration-500 px-3 py-1 text-sm rounded-full shadow-lg`}
+                  >
+                    {property.forSale ? "FOR SALE" : "FOR RENT"}
+                  </button>
+
+                  <button className="absolute bottom-3 right-3 bg-white font-bold text-[#947054] px-3 py-1 text-sm rounded-full transition duration-500 group-hover:bg-[#947054] group-hover:text-white shadow-lg">
+                    {property.price}
+                  </button>
+                </div>
+                <div className="p-5">
+                  <h2 className="text-xl font-semibold">{property.title}</h2>
+                  <div className="py-1 flex text-center gap-3">
                     <img
-                      src={property.images[0]}
-                      alt={property.title}
+                      src="/home/location.webp"
+                      alt="location icon"
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-5"
                     />
-
-                    {property.images.length > 1 && (
-                      <div className="absolute bottom-3 left-3 flex space-x-1">
-                        {property.images.slice(0, 3).map((img, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-2 h-2 rounded-full ${
-                              idx === 0 ? "bg-white" : "bg-white/60"
-                            }`}
-                          />
-                        ))}
-                        {property.images.length > 3 && (
-                          <span className="text-xs bg-white/80 text-gray-800 rounded-full px-2">
-                            +{property.images.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <p className="text-[#947054] font-semibold">
+                      {property.location}
+                    </p>
                   </div>
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <svg
-                      className="w-16 h-16 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1"
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                )}
-
-                <button
-                  className={`absolute top-3 right-3 ${
-                    property.forSale ? "bg-[#947054]" : "bg-blue-600"
-                  } text-white group-hover:bg-white group-hover:text-[#947054] transition duration-500 px-3 py-1 text-sm rounded-full shadow-lg`}
-                >
-                  {property.forSale ? "FOR SALE" : "FOR RENT"}
-                </button>
-
-                <button className="absolute bottom-3 right-3 bg-white font-bold text-[#947054] px-3 py-1 text-sm rounded-full transition duration-500 group-hover:bg-[#947054] group-hover:text-white shadow-lg">
-                  {property.price}
-                </button>
-              </div>
-              <div className="p-5">
-                <h2 className="text-xl font-semibold">{property.title}</h2>
-                <div className="py-1 flex text-center gap-3">
-                  <img
-                    src="/home/location.webp"
-                    alt="location icon"
-                    loading="lazy"
-                    className="h-5"
-                  />
-                  <p className="text-[#947054] font-semibold">
-                    {property.location}
+                  <p className="text-sm py-2 line-clamp-2">
+                    {property.description}
                   </p>
-                </div>
-                <p className="text-sm py-2 line-clamp-2">
-                  {property.description}
-                </p>
-                <div className="flex gap-5 items-end justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="/home/bathtub.webp"
-                      alt="bathtub icon"
-                      className="h-4"
-                      loading="lazy"
-                    />
-                    <p className="text-[#947054]">{property.bathCount}</p>
+                  <div className="flex gap-5 items-end justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src="/home/bathtub.webp"
+                        alt="bathtub icon"
+                        className="h-4"
+                        loading="lazy"
+                      />
+                      <p className="text-[#947054]">{property.bathCount}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src="/home/space.webp"
+                        alt="space icon"
+                        loading="lazy"
+                        className="h-4"
+                      />
+                      <p className="text-[#947054]">{property.space}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="/home/space.webp"
-                      alt="space icon"
-                      loading="lazy"
-                      className="h-4"
-                    />
-                    <p className="text-[#947054]">{property.space}</p>
+                  <div className="flex justify-between mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => handleEditProperty(property)}
+                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        ></path>
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProperty(property.id)}
+                      className="text-red-600 hover:text-red-800 font-medium flex items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        ></path>
+                      </svg>
+                      Delete
+                    </button>
                   </div>
-                </div>
-                <div className="flex justify-between mt-4 pt-4 border-t border-gray-100">
-                  <button
-                    onClick={() => handleEditProperty(property)}
-                    className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      ></path>
-                    </svg>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProperty(property.id)}
-                    className="text-red-600 hover:text-red-800 font-medium flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      ></path>
-                    </svg>
-                    Delete
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       )}
 

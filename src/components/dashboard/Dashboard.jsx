@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Properties from "./Properties";
 import Users from "./Users";
 import MainPanel from "./MainPanel";
+import { authService } from "../../services/api";
 
 // Icons from lucide-react
 import {
@@ -255,7 +256,7 @@ const Dashboard = () => {
               </li>
             </ul>
 
-            <div className="px-3 mt-6 mb-2">
+            {/* <div className="px-3 mt-6 mb-2">
               {isSidebarOpen && (
                 <p className="text-xs font-medium text-gray-400 mb-2 pl-3">
                   SETTINGS
@@ -318,7 +319,7 @@ const Dashboard = () => {
                   )}
                 </button>
               </li>
-            </ul>
+            </ul> */}
           </nav>{" "}
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-[#e8e1d9] mt-auto">
@@ -335,7 +336,6 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-
             <Link
               to="/"
               className="flex items-center p-3 rounded-lg hover:bg-[#f9f7f5] text-gray-700 transition-colors"
@@ -353,10 +353,19 @@ const Dashboard = () => {
                   View Website
                 </motion.span>
               )}
-            </Link>
+            </Link>{" "}
             <button
               className="flex items-center w-full p-3 rounded-lg hover:bg-[#f9f7f5] text-red-600 transition-colors mt-2"
-              onClick={() => navigate("/login")}
+              onClick={async () => {
+                try {
+                  await authService.logout();
+                  navigate("/login");
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                  // Logout anyway even if API fails
+                  navigate("/login");
+                }
+              }}
             >
               <LogOut size={20} />
               {isSidebarOpen && (

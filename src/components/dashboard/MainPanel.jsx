@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -14,71 +14,162 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { dashboardService } from "../../services/api";
 
 const MainPanel = () => {
-  // Sample data for charts
-  const propertyData = [
-    { month: "Jan", sales: 5, rentals: 12 },
-    { month: "Feb", sales: 8, rentals: 15 },
-    { month: "Mar", sales: 12, rentals: 18 },
-    { month: "Apr", sales: 9, rentals: 20 },
-    { month: "May", sales: 15, rentals: 22 },
-    { month: "Jun", sales: 18, rentals: 25 },
-  ];
-
-  const userActivityData = [
-    { name: "Monday", visits: 24 },
-    { name: "Tuesday", visits: 35 },
-    { name: "Wednesday", visits: 42 },
-    { name: "Thursday", visits: 38 },
-    { name: "Friday", visits: 45 },
-    { name: "Saturday", visits: 56 },
-    { name: "Sunday", visits: 48 },
-  ];
-
-  const propertyDistribution = [
-    { name: "Apartments", value: 45 },
-    { name: "Houses", value: 30 },
-    { name: "Villas", value: 15 },
-    { name: "Commercial", value: 10 },
-  ];
-  const COLORS = ["#947054", "#C4A484", "#DEC19B", "#E8E1D9"];
-
-  const stats = [
+  // State for dashboard data
+  const [propertyData, setPropertyData] = useState([]);
+  const [userActivityData, setUserActivityData] = useState([]);
+  const [propertyDistribution, setPropertyDistribution] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [stats, setStats] = useState([
     {
       title: "Total Properties",
-      value: 156,
-      change: "+12%",
+      value: "...",
+      change: "0%",
       icon: "🏠",
       bg: "#f0e6dd",
     },
     {
       title: "Total Users",
-      value: 2453,
-      change: "+5.3%",
+      value: "...",
+      change: "0%",
       icon: "👥",
       bg: "#e4d7cc",
     },
     {
       title: "Active Listings",
-      value: 87,
-      change: "+2.6%",
+      value: "...",
+      change: "0%",
       icon: "📋",
       bg: "#f5efe7",
     },
     {
       title: "Monthly Revenue",
-      value: "$43,652",
-      change: "+8.1%",
+      value: "...",
+      change: "0%",
       icon: "💰",
       bg: "#ebe0d5",
     },
-  ];
+  ]);
+  const [loading, setLoading] = useState(true);
+  const COLORS = ["#947054", "#C4A484", "#DEC19B", "#E8E1D9"];
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch all data in parallel
+        const [
+          statsData,
+          propertyTrends,
+          userActivity,
+          distributionData,
+          activities,
+        ] = await Promise.all([
+          dashboardService.getDashboardStats(),
+          dashboardService.getPropertySalesRentals(),
+          dashboardService.getUserActivity(),
+          dashboardService.getPropertyDistribution(),
+          dashboardService.getRecentActivity(),
+        ]);
+
+        // Update stats
+        if (statsData) {
+          const newStats = [
+            {
+              title: "Total Properties",
+              value: statsData.totalProperties,
+              change: statsData.statsChange?.properties || "0%",
+              icon: "🏠",
+              bg: "#f0e6dd",
+            },
+            {
+              title: "Total Users",
+              value: statsData.totalUsers,
+              change: statsData.statsChange?.users || "0%",
+              icon: "👥",
+              bg: "#e4d7cc",
+            },
+            {
+              title: "Active Listings",
+              value: statsData.activeListings,
+              change: statsData.statsChange?.listings || "0%",
+              icon: "📋",
+              bg: "#f5efe7",
+            },
+            {
+              title: "Monthly Revenue",
+              value: statsData.monthlyRevenue,
+              change: statsData.statsChange?.revenue || "0%",
+              icon: "💰",
+              bg: "#ebe0d5",
+            },
+          ];
+          setStats(newStats);
+        }
+
+        // Update other state variables
+        if (propertyTrends?.data) setPropertyData(propertyTrends.data);
+        if (userActivity?.data) setUserActivityData(userActivity.data);
+        if (distributionData?.data)
+          setPropertyDistribution(distributionData.data);
+        if (activities?.data) setRecentActivities(activities.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // If API fails, use fallback data
+        setPropertyData([
+          { month: "Jan", sales: 5, rentals: 12 },
+          { month: "Feb", sales: 8, rentals: 15 },
+          { month: "Mar", sales: 12, rentals: 18 },
+          { month: "Apr", sales: 9, rentals: 20 },
+          { month: "May", sales: 15, rentals: 22 },
+          { month: "Jun", sales: 18, rentals: 25 },
+        ]);
+
+        setUserActivityData([
+          { name: "Monday", visits: 24 },
+          { name: "Tuesday", visits: 35 },
+          { name: "Wednesday", visits: 42 },
+          { name: "Thursday", visits: 38 },
+          { name: "Friday", visits: 45 },
+          { name: "Saturday", visits: 56 },
+          { name: "Sunday", visits: 48 },
+        ]);
+
+        setPropertyDistribution([
+          { name: "Apartments", value: 45 },
+          { name: "Houses", value: 30 },
+          { name: "Villas", value: 15 },
+          { name: "Commercial", value: 10 },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+
+    // Set up a refresh interval (every 5 minutes)
+    const refreshInterval = setInterval(() => {
+      fetchDashboardData();
+    }, 5 * 60 * 1000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(refreshInterval);
+  }, []);
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* <h2 className="text-2xl font-serif font-semibold mb-6 text-[#947054]">
+      <h2 className="text-2xl font-serif font-semibold mb-6 text-[#947054]">
         Dashboard Overview
-      </h2> */}
+        {loading && (
+          <span className="text-sm font-normal ml-2 text-gray-500">
+            (Loading...)
+          </span>
+        )}
+      </h2>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
@@ -257,69 +348,50 @@ const MainPanel = () => {
             Recent Activity
           </h3>
           <div className="space-y-4">
-            <div className="flex items-start space-x-4 p-3 border-l-4 border-[#947054] rounded-r-lg bg-[#f9f7f5] hover:scale-[1.02] transition-transform">
-              <div
-                className="w-10 h-10 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: "#f0e6dd" }}
-              >
-                <span className="text-[#947054] text-xl">🏠</span>
+            {loading ? (
+              <div className="flex justify-center items-center h-40">
+                <p>Loading activities...</p>
               </div>
-              <div>
-                <p className="font-medium text-gray-800">New Property Listed</p>
-                <p className="text-sm text-gray-600">
-                  Villa in Beverly Hills - $1,250,000
-                </p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+            ) : recentActivities && recentActivities.length > 0 ? (
+              recentActivities.map((activity, index) => (
+                <div
+                  key={index}
+                  className={`flex items-start space-x-4 p-3 border-l-4 rounded-r-lg bg-[#f9f7f5] hover:scale-[1.02] transition-transform`}
+                  style={{
+                    borderColor:
+                      activity.color || COLORS[index % COLORS.length],
+                  }}
+                >
+                  <div
+                    className="w-10 h-10 flex items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: activity.color
+                        ? `${activity.color}20`
+                        : "#f0e6dd",
+                    }}
+                  >
+                    <span className="text-[#947054] text-xl">
+                      {activity.icon}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {activity.title}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {activity.time}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex justify-center items-center h-40">
+                <p>No recent activities</p>
               </div>
-            </div>
-
-            <div className="flex items-start space-x-4 p-3 border-l-4 border-[#C4A484] rounded-r-lg bg-[#f9f7f5] hover:scale-[1.02] transition-transform">
-              <div
-                className="w-10 h-10 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: "#e4d7cc" }}
-              >
-                <span className="text-[#947054] text-xl">💰</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-800">Property Sold</p>
-                <p className="text-sm text-gray-600">
-                  Apartment in Downtown - $450,000
-                </p>
-                <p className="text-xs text-gray-500 mt-1">5 hours ago</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4 p-3 border-l-4 border-[#DEC19B] rounded-r-lg bg-[#f9f7f5] hover:scale-[1.02] transition-transform">
-              <div
-                className="w-10 h-10 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: "#f5efe7" }}
-              >
-                <span className="text-[#947054] text-xl">👤</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-800">New User Registered</p>
-                <p className="text-sm text-gray-600">
-                  Sarah Williams joined the platform
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Yesterday</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4 p-3 border-l-4 border-[#E8E1D9] rounded-r-lg bg-[#f9f7f5] hover:scale-[1.02] transition-transform">
-              <div
-                className="w-10 h-10 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: "#ebe0d5" }}
-              >
-                <span className="text-[#947054] text-xl">⭐</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-800">New Review</p>
-                <p className="text-sm text-gray-600">
-                  5-star review for Seaside Villa
-                </p>
-                <p className="text-xs text-gray-500 mt-1">2 days ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

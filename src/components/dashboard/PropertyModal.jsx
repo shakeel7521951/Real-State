@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { propertyService } from "../../services/api"; // Import API service
 
 const PropertyModal = ({ isOpen, onClose, property, onSave }) => {
   const initialFormState = useMemo(
@@ -18,6 +19,9 @@ const PropertyModal = ({ isOpen, onClose, property, onSave }) => {
 
   const [formData, setFormData] = useState(initialFormState);
   const [imagesPreviews, setImagesPreviews] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
   useEffect(() => {
     if (property) {
       setFormData({
@@ -47,25 +51,28 @@ const PropertyModal = ({ isOpen, onClose, property, onSave }) => {
       [name]: type === "checkbox" ? checked : value,
     });
   };
-
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       const newImagePreviews = [];
-      const newImages = [];
 
+      // Create local preview URLs for the UI
       files.forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newImagePreviews.push(reader.result);
-          newImages.push(reader.result);
 
-          // Update state once all files are processed
-          if (newImages.length === files.length) {
+          // Update state once all files are processed for preview
+          if (newImagePreviews.length === files.length) {
             setImagesPreviews([...imagesPreviews, ...newImagePreviews]);
+
+            // Store file objects for uploading later when form is submitted
+            // We'll store the actual files instead of the base64 strings
             setFormData({
               ...formData,
-              images: [...(formData.images || []), ...newImages],
+              _files: [...(formData._files || []), ...files],
+              // Keep the existing images array (these are URLs that are already uploaded)
+              images: formData.images || [],
             });
           }
         };
@@ -77,21 +84,73 @@ const PropertyModal = ({ isOpen, onClose, property, onSave }) => {
   const removeImage = (index) => {
     const updatedPreviews = [...imagesPreviews];
     const updatedImages = [...formData.images];
+
+    // If we're removing a preview of a new file (not yet uploaded)
+    if (index >= formData.images.length && formData._files) {
+      const fileIndex = index - formData.images.length;
+      const updatedFiles = [...formData._files];
+      updatedFiles.splice(fileIndex, 1);
+      setFormData({
+        ...formData,
+        _files: updatedFiles,
+        images: updatedImages,
+      });
+    } else {
+      // We're removing an already uploaded image
+      updatedImages.splice(index, 1);
+      setFormData({
+        ...formData,
+        images: updatedImages,
+      });
+    }
+
     updatedPreviews.splice(index, 1);
-    updatedImages.splice(index, 1);
     setImagesPreviews(updatedPreviews);
-    setFormData({
-      ...formData,
-      images: updatedImages,
-    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For integration: This is where you would call an API
-    onSave(formData);
-    onClose();
+    try {
+      setIsUploading(true);
+      setUploadError("");
+
+      // Only upload new files if there are any
+      let allImageUrls = [...formData.images]; // Start with existing images
+
+      if (formData._files && formData._files.length > 0) {
+        // Upload new images to Cloudinary
+        const uploadResponse = await propertyService.uploadPropertyImages(
+          formData._files
+        );
+
+        if (uploadResponse.success && uploadResponse.data) {
+          // Add the new image URLs to our existing ones
+          allImageUrls = [...allImageUrls, ...uploadResponse.data];
+        } else {
+          throw new Error(uploadResponse.error || "Failed to upload images");
+        }
+      }
+
+      // Create the final property data with all image URLs
+      const finalPropertyData = {
+        ...formData,
+        images: allImageUrls,
+      };
+
+      // Remove the _files property as it's no longer needed
+      delete finalPropertyData._files;
+
+      // Save the property with all image URLs included
+      onSave(finalPropertyData);
+      onClose();
+    } catch (error) {
+      setUploadError(error.message || "Failed to upload images");
+      console.error("Error during image upload:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
+
   if (!isOpen) return null;
 
   return (
@@ -439,23 +498,44 @@ const PropertyModal = ({ isOpen, onClose, property, onSave }) => {
                 type="submit"
                 className="px-6 py-2.5 bg-gradient-to-r from-[#947054] to-[#a88b74] hover:from-[#7d5e48] hover:to-[#8a7462] text-white font-medium rounded-md focus:outline-none transition duration-200 ease-in-out shadow-md hover:shadow-lg flex items-center"
               >
-                <svg
-                  className="w-5 h-5 mr-1.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                  ></path>
-                </svg>
+                {isUploading ? (
+                  <svg
+                    className="w-5 h-5 mr-2 animate-spin"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 4v8l4 4m0 0l4-4m-4 4V4"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5 mr-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                    ></path>
+                  </svg>
+                )}
                 {property ? "Update Property" : "Add Property"}
               </button>
             </div>
+
+            {uploadError && (
+              <div className="mt-4 text-red-500 text-sm">{uploadError}</div>
+            )}
           </form>
         </div>
       </div>

@@ -8,12 +8,10 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
-  Check,
-  X,
-  Filter,
 } from "lucide-react";
+import { userService } from "../../services/api";
 
-// Sample data for development (will be replaced with API calls)
+// Sample data for fallback in case API fails
 const sampleUsers = [
   {
     id: 1,
@@ -215,7 +213,7 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
 };
 
 const Users = () => {
-  const [users, setUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -224,6 +222,31 @@ const Users = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await userService.getAllUsers();
+        setUsers(response.data || []);
+        setError("");
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+        setError("Failed to load users. Please try again later.");
+        // Fallback to sample data if in development
+        if (import.meta.env.DEV) {
+          setUsers(sampleUsers);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchUsers();
+  }, []);
+
   // Check if the screen is mobile on mount and on resize
   useEffect(() => {
     const checkMobile = () => {
@@ -274,20 +297,49 @@ const Users = () => {
       setUsers(users.filter((user) => user.id !== userId));
     }
   };
-
-  const handleSaveUser = (userData) => {
+  const handleSaveUser = async (userData) => {
     if (userData.id) {
-      // Edit existing user
-      setUsers(
-        users.map((user) => (user.id === userData.id ? userData : user))
-      );
+      // Update user role only (as per requirements)
+      try {
+        setLoading(true);
+        // Only update the role as per requirements
+        const response = await userService.updateUserRole(
+          userData.id,
+          userData.role
+        );
+        if (response.success) {
+          // Update the local state
+          setUsers(
+            users.map((user) =>
+              user.id === userData.id
+                ? {
+                    ...user,
+                    role: userData.role,
+                  }
+                : user
+            )
+          );
+          setError("");
+        }
+      } catch (err) {
+        console.error("Failed to update user:", err);
+        setError("Failed to update user. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     } else {
-      // Add new user
-      const newUser = {
-        ...userData,
-        id: users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1,
-      };
-      setUsers([...users, newUser]);
+      // In a real application, you would implement user creation
+      // But as per requirements, we're just focusing on role updates for existing users
+      console.log("User creation not implemented as per requirements");
+
+      // For demo purposes only - remove in production
+      if (import.meta.env.DEV) {
+        const newUser = {
+          ...userData,
+          id: users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1,
+        };
+        setUsers([...users, newUser]);
+      }
     }
   };
 
