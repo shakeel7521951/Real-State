@@ -5,6 +5,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
 import SignUp from "./pages/Signup";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
       { path: "/home", element: <Home /> },
       { path: "/about", element: <About /> },
       { path: "/properties", element: <Properties /> },
+      { path: "/property/:id", element: <PropertyDetail /> },
       { path: "/contact", element: <Contact /> },
       { path: "/login", element: <Login /> },
       { path: "/signup", element: <SignUp /> },

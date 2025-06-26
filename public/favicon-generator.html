@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Favicon Generator</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Draw house favicon
+        ctx.fillStyle = '#947054';
+
+        // House base
+        ctx.fillRect(6, 16, 20, 14);
+
+        // Roof
+        ctx.beginPath();
+        ctx.moveTo(4, 16);
+        ctx.lineTo(16, 4);
+        ctx.lineTo(28, 16);
+        ctx.closePath();
+        ctx.fill();
+
+        // Door
+        ctx.fillStyle = '#5a4037';
+        ctx.fillRect(13, 22, 6, 8);
+
+        // Door knob
+        ctx.fillStyle = '#947054';
+        ctx.beginPath();
+        ctx.arc(17, 26, 1, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Windows
+        ctx.fillStyle = '#87ceeb';
+        ctx.fillRect(8, 18, 3, 3);
+        ctx.fillRect(21, 18, 3, 3);
+
+        // Download as ICO (simplified approach)
+        const link = document.createElement('a');
+        link.download = 'favicon.ico';
+        link.href = canvas.toDataURL();
+        document.body.appendChild(link);
+    </script>
+</body>
+
+</html>

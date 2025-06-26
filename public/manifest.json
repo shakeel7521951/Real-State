@@ -1,0 +1,19 @@
+{
+  "name": "Premier Real Estate",
+  "short_name": "Premier RE",
+  "description": "Find your dream home with Premier Real Estate",
+  "theme_color": "#947054",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

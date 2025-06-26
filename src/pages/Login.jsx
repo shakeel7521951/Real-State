@@ -8,8 +8,11 @@ import {
 } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/api";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const Login = () => {
+  useDocumentTitle("Login");
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",

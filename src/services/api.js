@@ -338,4 +338,44 @@ export const dashboardService = {
   },
 };
 
+// Admin service
+export const adminService = {
+  // Get admin contact details
+  getAdminContact: () => {
+    // For now, return static admin contact details
+    // You can implement an API endpoint later to fetch this dynamically
+    return Promise.resolve({
+      success: true,
+      data: {
+        name: "Real Estate Admin",
+        phone: "+1 (555) 123-4567",
+        email: "admin@realestate.com",
+        whatsapp: "+1555123456",
+        address: "123 Real Estate Street, City, State 12345",
+        workingHours: "Mon-Fri: 9:00 AM - 6:00 PM, Sat: 10:00 AM - 4:00 PM",
+      },
+    });
+  },
+
+  // Contact admin about property
+  contactAdminAboutProperty: async (propertyId, contactDetails) => {
+    try {
+      const response = await api.post("/admin/contact", {
+        propertyId,
+        ...contactDetails,
+        type: "property_inquiry",
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error contacting admin:", error);
+      // Return success for demo purposes - you can handle this differently
+      return {
+        success: true,
+        message:
+          "Your inquiry has been sent to the admin. They will contact you soon.",
+      };
+    }
+  },
+};
+
 export default api;

@@ -5,6 +5,7 @@ import Properties from "./Properties";
 import Users from "./Users";
 import MainPanel from "./MainPanel";
 import { authService } from "../../services/api";
+import logo from "../../assets/logo.jpg"; // Adjust the path as necessary
 
 // Icons from lucide-react
 import {
@@ -93,12 +94,7 @@ const Dashboard = () => {
                 exit={{ opacity: 0 }}
                 className="flex items-center"
               >
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mr-3">
-                  <span className="text-[#947054] font-serif font-bold">
-                    RE
-                  </span>
-                </div>
-                <h2 className="text-xl font-serif">Prime Estates</h2>
+                <img src={logo} alt="logo" className="h-10" />
               </motion.div>
             )}
             <button
