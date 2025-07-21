@@ -4,6 +4,7 @@ import HomePoster from "../components/home/HomePoster";
 import WhyChooseUs from "../components/home/WhyChooseUs";
 import OurAgents from "../components/home/OurAgents";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import ServicesSection from "../components/home/Services";
 
 const Home = () => {
   useDocumentTitle("Find Your Dream Home");
@@ -13,6 +14,7 @@ const Home = () => {
       <Header />
       <FeaturedProperties />
       <HomePoster />
+      <ServicesSection />
       <WhyChooseUs />
       <OurAgents />
     </div>
